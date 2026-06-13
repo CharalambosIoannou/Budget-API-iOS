@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: -apple-system; background: #000; color: #fff; padding: 20px; }
+        .card { background: #1c1c1e; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .tx { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2c2c2e; }
+        .amount { font-weight: bold; color: #30d158; }
+        .merchant { font-size: 0.9em; }
+        .category { font-size: 0.7em; color: #8e8e93; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <h1>Spending</h1>
+    <div id="loading">Loading transactions...</div>
+    <div id="list"></div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyG63EKonImo008DsUycB7iIVvBilN2MZm_36Ue-usqmsBp-_W-_qfar0VaYHytcjRsdg/exec";
+
+        async function loadData() {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            document.getElementById('loading').style.display = 'none';
+            
+            const list = document.getElementById('list');
+            list.innerHTML = data.map(tx => `
+                <div class="tx">
+                    <div>
+                        <div class="merchant">${tx.merchant}</div>
+                        <div class="category">${tx.category}</div>
+                    </div>
+                    <div class="amount">€${tx.amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+        loadData();
+    </script>
+</body>
+</html>
