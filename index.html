@@ -2,43 +2,226 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Budget Dashboard</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        body { font-family: -apple-system; background: #000; color: #fff; padding: 20px; }
-        .card { background: #1c1c1e; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        .tx { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2c2c2e; }
-        .amount { font-weight: bold; color: #30d158; }
-        .merchant { font-size: 0.9em; }
-        .category { font-size: 0.7em; color: #8e8e93; text-transform: uppercase; }
+        :root {
+            --bg: #000000;
+            --card-bg: #1C1C1E;
+            --text: #FFFFFF;
+            --accent: #30D158;
+            --secondary: #8E8E93;
+            --border: #2C2C2E;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            padding-top: 60px; /* Space for the notch */
+            -webkit-user-select: none;
+        }
+
+        .header {
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .summary-label {
+            color: var(--secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-amount {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 5px 0;
+            color: var(--accent);
+        }
+
+        /* List Styling */
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-left: 5px;
+        }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tx-item {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tx-icon {
+            width: 44px;
+            height: 44px;
+            background: #2C2C2E;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .tx-details .merchant {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .tx-details .category {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        .tx-amount {
+            font-weight: 700;
+            font-size: 17px;
+        }
+
+        /* Loading & Empty States */
+        #status-msg {
+            text-align: center;
+            color: var(--secondary);
+            margin-top: 50px;
+            font-size: 15px;
+        }
+
+        .refresh-hint {
+            font-size: 11px;
+            color: var(--secondary);
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
-    <h1>Spending</h1>
-    <div id="loading">Loading transactions...</div>
-    <div id="list"></div>
+
+    <div class="header">
+        <h1>Spending</h1>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-label">Total Today</div>
+        <div id="today-total" class="summary-amount">€0.00</div>
+    </div>
+
+    <div class="section-title">Recent Activity</div>
+    
+    <div id="status-msg">Loading transactions...</div>
+    <div id="tx-list" class="list-container"></div>
+
+    <div class="refresh-hint">Pull to refresh or reopen app to update</div>
 
     <script>
+        // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL
         const API_URL = "https://script.google.com/macros/s/AKfycbyG63EKonImo008DsUycB7iIVvBilN2MZm_36Ue-usqmsBp-_W-_qfar0VaYHytcjRsdg/exec";
 
-        async function loadData() {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            document.getElementById('loading').style.display = 'none';
-            
-            const list = document.getElementById('list');
-            list.innerHTML = data.map(tx => `
-                <div class="tx">
-                    <div>
-                        <div class="merchant">${tx.merchant}</div>
-                        <div class="category">${tx.category}</div>
-                    </div>
-                    <div class="amount">€${tx.amount.toFixed(2)}</div>
-                </div>
-            `).join('');
+        const categoryIcons = {
+            "Coffee": "☕",
+            "Transport": "🚗",
+            "Groceries": "🛒",
+            "Subscriptions": "📺",
+            "Other": "💸"
+        };
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    document.getElementById('status-msg').innerText = "No transactions yet. Start tapping!";
+                    return;
+                }
+
+                document.getElementById('status-msg').style.display = 'none';
+                renderList(data);
+                calculateDailyTotal(data);
+
+            } catch (error) {
+                document.getElementById('status-msg').innerText = "Error loading data. Check API URL.";
+                console.error(error);
+            }
         }
-        loadData();
+
+        function renderList(transactions) {
+            const listElement = document.getElementById('tx-list');
+            listElement.innerHTML = transactions.map(tx => {
+                const icon = categoryIcons[tx.category] || categoryIcons["Other"];
+                const amount = parseFloat(tx.amount).toFixed(2);
+                
+                return `
+                    <div class="tx-item">
+                        <div class="tx-left">
+                            <div class="tx-icon">${icon}</div>
+                            <div class="tx-details">
+                                <div class="merchant">${tx.merchant}</div>
+                                <div class="category">${tx.category}</div>
+                            </div>
+                        </div>
+                        <div class="tx-amount">€${amount}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateDailyTotal(transactions) {
+            const today = new Date().toLocaleDateString();
+            const total = transactions
+                .filter(tx => new Date(tx.date).toLocaleDateString() === today)
+                .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            
+            document.getElementById('today-total').innerText = `€${total.toFixed(2)}`;
+        }
+
+        // Initial Load
+        fetchData();
+        
+        // Refresh when the app comes back to foreground
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") fetchData();
+        });
     </script>
 </body>
 </html>
