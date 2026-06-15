@@ -113,7 +113,7 @@
         font-weight: 600;
       }
       .cat-meta {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--sec);
         font-weight: 400;
       }
@@ -221,7 +221,6 @@
   <body>
     <div class="top-nav">
       <div
-        id="health-text"
         style="
           font-size: 10px;
           font-weight: 700;
@@ -262,8 +261,8 @@
           <div id="a-fixed" class="m-val">€0</div>
         </div>
         <div class="m-card">
-          <div class="m-title">Variable Spent</div>
-          <div id="a-variable" class="m-val">€0</div>
+          <div class="m-title">Spent</div>
+          <div id="a-spent" class="m-val">€0</div>
         </div>
         <div
           class="m-card"
@@ -356,7 +355,7 @@
 
     <script>
       const API_URL =
-        'https://script.google.com/macros/s/AKfycbzO3KN7gunQcc1yXvHGkWTo88NiBOwGWRlcomZg__F1sx5q91qO56WhG3vDULLBOjea/exec';
+        'https://script.google.com/macros/s/AKfycbxRIlIQf1RjuJJ0aJQBw7TOPAS9B9Lkbz74wGJWs161Yu3IekWiLdlUXXAYZsWyNuoolg/exec';
       const ICONS = {
         Housing: '🏠',
         'Food & Dining': '🍔',
@@ -390,9 +389,13 @@
         try {
           const res = await fetch(API_URL);
           appData = await res.json();
+          if (appData.error) {
+            alert('Script Error: ' + appData.error);
+            return;
+          }
           renderAll();
         } catch (e) {
-          console.error(e);
+          alert('Fetch failed. Check your API URL.');
         }
       }
 
@@ -455,27 +458,30 @@
           '€' + Number(appData.summary.income).toFixed(0);
         document.getElementById('a-fixed').innerText =
           '€' + Number(appData.summary.fixed).toFixed(0);
-        document.getElementById('a-variable').innerText =
-          '€' + Number(appData.summary.variable).toFixed(0);
+        document.getElementById('a-spent').innerText =
+          '€' + Number(appData.summary.totalSpent).toFixed(0);
         document.getElementById('a-saved').innerText =
           '€' + Number(appData.summary.saved).toFixed(0);
 
+        const totalSpend = appData.summary.totalSpent || 1;
         document.getElementById('category-progress-list').innerHTML =
           Object.keys(appData.categories)
             .map((cat) => {
               const spent = appData.categories[cat];
               const limit = appData.limits[cat] || 0;
-              const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+              const pctOfTotal = (spent / totalSpend) * 100;
+              const limitPct =
+                limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
               return `<div class="cat-row"><div class="cat-header"><div>${
                 ICONS[cat] || ''
               } ${cat} <span style="font-size:11px; font-weight:400; color:var(--sec)">${Math.round(
-                pct
-              )}%</span></div><div>€${spent.toFixed(
+                pctOfTotal
+              )}% of total</span></div><div>€${spent.toFixed(
                 0
               )} <span style="font-size:11px; font-weight:400; color:var(--sec)">/ €${limit.toFixed(
                 0
-              )}</span></div></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${pct}%; background:${
-                pct > 95 ? 'var(--red)' : 'var(--blue)'
+              )}</span></div></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${limitPct}%; background:${
+                limitPct > 95 ? 'var(--red)' : 'var(--blue)'
               }"></div></div></div>`;
             })
             .join('');
@@ -508,7 +514,7 @@
 
         document.getElementById(
           'insights-list'
-        ).innerHTML = `<div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">🔥</div><div><div class="r-name">${appData.summary.topVendor}</div><div class="r-cat">Most money spent at this vendor</div></div></div></div><div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">📊</div><div><div class="r-name">${appData.summary.topCategory}</div><div class="r-cat">Your biggest expense category</div></div></div></div>`;
+        ).innerHTML = `<div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">🔥</div><div><div class="r-name">${appData.summary.topVendor}</div><div class="r-cat">Most frequent merchant</div></div></div></div><div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">📊</div><div><div class="r-name">${appData.summary.topCategory}</div><div class="r-cat">Highest spend category</div></div></div></div>`;
 
         document.getElementById(
           'bill-total'
