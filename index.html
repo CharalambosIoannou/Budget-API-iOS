@@ -1,219 +1,584 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Budget Advisor Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
-        /* CSS SECTION */
-        :root { --bg: #000; --card: #1C1C1E; --accent: #30D158; --text: #FFF; --sec: #8E8E93; --blue: #0A84FF; --orange: #FF9F0A; --red: #FF453A; --glass: rgba(15, 15, 17, 0.9); }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 120px; overflow-x: hidden; }
-        
-        .top-nav { padding: 60px 20px 15px; position: sticky; top: 0; background: var(--bg); z-index: 100; border-bottom: 0.5px solid #222; }
-        .content { display: none; padding: 20px; }
-        .active { display: block; }
-
-        /* Health Bar */
-        .health-bar-container { height: 4px; background: #2C2C2E; border-radius: 2px; margin: 8px 0; overflow: hidden; }
-        .health-fill { height: 100%; transition: width 0.5s; }
-        .health-text { font-size: 10px; text-transform: uppercase; font-weight: 700; color: var(--sec); }
-
-        /* Today Feature */
-        .today-summary-box { background: rgba(48, 209, 88, 0.1); border: 1.5px solid var(--accent); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 25px; }
-        .today-label { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
-        .today-total { font-size: 38px; font-weight: 800; color: var(--accent); }
-
-        /* Daily List */
-        .day-group { margin-bottom: 30px; }
-        .day-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
-        .day-date { font-size: 14px; font-weight: 600; color: var(--sec); }
-        .day-total { font-size: 14px; font-weight: 700; color: var(--sec); }
-
-        /* Analysis Metrics */
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .m-card { background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid #2C2C2E; }
-        .m-title { font-size: 10px; color: var(--sec); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
-        .m-val { font-size: 18px; font-weight: 700; }
-
-        /* Progress List */
-        .cat-row { margin-bottom: 15px; background: var(--card); padding: 15px; border-radius: 16px; }
-        .cat-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; font-weight: 600; }
-        .cat-meta { font-size: 12px; color: var(--sec); font-weight: 400; }
-        .cat-bar-bg { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
-        .cat-bar-fill { height: 100%; background: var(--blue); }
-
-        /* Tab Bar Icons */
-        .tabs { position: fixed; bottom: 0; width: 100%; height: 90px; background: var(--glass); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 10px; border-top: 0.5px solid #333; z-index: 1000; }
-        .tab { display: flex; flex-direction: column; align-items: center; color: var(--sec); font-size: 10px; background: none; border: none; width: 33%; gap: 6px; }
-        .tab.active { color: var(--blue); }
-        .tab svg { width: 22px; height: 22px; } /* Fixed Size */
-
-        /* General Rows */
-        .row { background: var(--card); padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .r-info { display: flex; align-items: center; gap: 12px; }
-        .r-icon { width: 40px; height: 40px; background: #2C2C2E; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .r-name { font-weight: 600; font-size: 15px; }
-        .r-cat { font-size: 11px; color: var(--sec); }
-        .r-amt { font-weight: 700; font-size: 16px; }
-
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; align-items:center; justify-content:center; }
-        .m-content { background:var(--card); width:80%; padding:25px; border-radius:24px; text-align:center; }
-        .cat-btn { display:block; width:100%; padding:14px; margin:8px 0; background:#2C2C2E; border-radius:12px; color:#fff; border:none; font-weight:600; }
+      :root {
+        --bg: #000;
+        --card: #1c1c1e;
+        --accent: #30d158;
+        --text: #fff;
+        --sec: #8e8e93;
+        --blue: #0a84ff;
+        --orange: #ff9f0a;
+        --red: #ff453a;
+      }
+      body {
+        font-family: -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding-bottom: 120px;
+      }
+      .top-nav {
+        padding: 60px 20px 15px;
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+        z-index: 100;
+        border-bottom: 0.5px solid #222;
+      }
+      .content {
+        display: none;
+        padding: 20px;
+      }
+      .active {
+        display: block;
+      }
+      .today-summary-box {
+        background: rgba(48, 209, 88, 0.1);
+        border: 1.5px solid var(--accent);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 25px;
+      }
+      .today-total {
+        font-size: 38px;
+        font-weight: 800;
+        color: var(--accent);
+      }
+      .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+      .day-date {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sec);
+      }
+      .day-total {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--sec);
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .m-card {
+        background: var(--card);
+        padding: 15px;
+        border-radius: 16px;
+        border: 1px solid #2c2c2e;
+      }
+      .m-title {
+        font-size: 10px;
+        color: var(--sec);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .m-val {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .cat-row {
+        margin-bottom: 15px;
+        background: var(--card);
+        padding: 15px;
+        border-radius: 16px;
+      }
+      .cat-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+      .cat-meta {
+        font-size: 12px;
+        color: var(--sec);
+        font-weight: 400;
+      }
+      .cat-bar-bg {
+        height: 6px;
+        background: #333;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .cat-bar-fill {
+        height: 100%;
+        background: var(--blue);
+      }
+      .tabs {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 90px;
+        background: rgba(15, 15, 17, 0.9);
+        backdrop-filter: blur(20px);
+        display: flex;
+        justify-content: space-around;
+        padding-top: 10px;
+        border-top: 0.5px solid #333;
+        z-index: 1000;
+      }
+      .tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--sec);
+        font-size: 10px;
+        background: none;
+        border: none;
+        width: 33%;
+        gap: 6px;
+      }
+      .tab.active {
+        color: var(--blue);
+      }
+      .tab svg {
+        width: 22px;
+        height: 22px;
+      }
+      .row {
+        background: var(--card);
+        padding: 15px;
+        border-radius: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .r-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .r-icon {
+        width: 40px;
+        height: 40px;
+        background: #2c2c2e;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .r-amt {
+        font-weight: 700;
+        font-size: 16px;
+      }
+      #modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+      .m-content {
+        background: var(--card);
+        width: 80%;
+        padding: 25px;
+        border-radius: 24px;
+        text-align: center;
+      }
+      .cat-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        margin: 8px 0;
+        background: #2c2c2e;
+        border-radius: 12px;
+        color: #fff;
+        border: none;
+        font-weight: 600;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="top-nav">
-        <div class="health-text" id="health-text">Financial Health</div>
-        <div class="health-bar-container"><div id="health-fill" class="health-fill"></div></div>
+      <div
+        id="health-text"
+        style="
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--sec);
+          text-transform: uppercase;
+        "
+      >
+        Financial Health
+      </div>
+      <div
+        style="
+          height: 4px;
+          background: #2c2c2e;
+          border-radius: 2px;
+          margin-top: 8px;
+        "
+      >
+        <div
+          id="health-fill"
+          style="height: 100%; width: 0%; transition: 0.5s"
+        ></div>
+      </div>
     </div>
 
-    <!-- ACTIVITY -->
     <div id="feed" class="content active">
-        <div id="today-summary"></div>
-        <div id="warnings"></div>
-        <div id="daily-feed"></div>
+      <div id="today-summary"></div>
+      <div id="daily-feed"></div>
     </div>
 
-    <!-- ANALYSIS -->
     <div id="analysis" class="content">
-        <div class="metrics-grid">
-            <div class="m-card"><div class="m-title">Income</div><div id="a-income" class="m-val">€0</div></div>
-            <div class="m-card"><div class="m-title">Fixed Bills</div><div id="a-fixed" class="m-val">€0</div></div>
-            <div class="m-card"><div class="m-title">Variable Spent</div><div id="a-variable" class="m-val">€0</div></div>
-            <div class="m-card" style="background: rgba(48, 209, 88, 0.1); border-color: var(--accent);">
-                <div class="m-title" style="color:var(--accent)">Remaining</div><div id="a-saved" class="m-val" style="color:var(--accent)">€0</div>
-            </div>
+      <div class="metrics-grid">
+        <div class="m-card">
+          <div class="m-title">Income</div>
+          <div id="a-income" class="m-val">€0</div>
         </div>
-        <div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:20px;"><canvas id="pieChart"></canvas></div>
-        <div id="category-progress-list"></div>
-        <div class="m-title" style="margin-top:20px;">Monthly Insights</div>
-        <div id="insights-list"></div>
+        <div class="m-card">
+          <div class="m-title">Fixed Bills</div>
+          <div id="a-fixed" class="m-val">€0</div>
+        </div>
+        <div class="m-card">
+          <div class="m-title">Variable Spent</div>
+          <div id="a-variable" class="m-val">€0</div>
+        </div>
+        <div
+          class="m-card"
+          style="
+            background: rgba(48, 209, 88, 0.1);
+            border-color: var(--accent);
+          "
+        >
+          <div class="m-title" style="color: var(--accent)">Saved</div>
+          <div id="a-saved" class="m-val" style="color: var(--accent)">€0</div>
+        </div>
+      </div>
+      <div
+        style="
+          background: var(--card);
+          padding: 20px;
+          border-radius: 20px;
+          margin-bottom: 20px;
+        "
+      >
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div id="category-progress-list"></div>
+      <div class="m-title" style="margin-top: 20px; margin-bottom: 10px">
+        Insights
+      </div>
+      <div id="insights-list"></div>
     </div>
 
-    <!-- BILLS -->
     <div id="bills" class="content">
-        <div class="m-card" style="margin-bottom:25px;"><div class="m-title">Total Subscriptions</div><div id="bill-total" class="m-val" style="font-size:32px; color:var(--orange);">€0</div></div>
-        <div id="calendar-container"></div>
-        <div class="m-title" style="margin-top:25px">Digital Subscriptions</div>
-        <div id="sub-list"></div>
-        <div class="m-title" style="margin-top:25px">Loans & Recurring</div>
-        <div id="recur-list"></div>
+      <div class="m-card" style="margin-bottom: 25px">
+        <div class="m-title">Total Subscriptions</div>
+        <div
+          id="bill-total"
+          class="m-val"
+          style="font-size: 32px; color: var(--orange)"
+        >
+          €0
+        </div>
+      </div>
+      <div class="m-title" style="margin-top: 25px; margin-bottom: 10px">
+        Digital Subscriptions
+      </div>
+      <div id="sub-list"></div>
+      <div class="m-title" style="margin-top: 25px; margin-bottom: 10px">
+        Loans & Recurring
+      </div>
+      <div id="recur-list"></div>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('feed', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h4v7H4v-7zm6-9h4v16h-4V5zm6 9h4v7h-4v-7z"/></svg>Activity</button>
-        <button class="tab" onclick="switchTab('analysis', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.52-4.24 8.99-8.99h-8.99z"/></svg>Analysis</button>
-        <button class="tab" onclick="switchTab('bills', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 16H4v-2h1V16zm0-4H4v-2h1V12zm0-4H4V6h1V8zm11 8H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg>Bills</button>
+      <button class="tab active" onclick="switchTab('feed', this)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 14h4v7H4v-7zm6-9h4v16h-4V5zm6 9h4v7h-4v-7z" /></svg
+        >Activity
+      </button>
+      <button class="tab" onclick="switchTab('analysis', this)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.52-4.24 8.99-8.99h-8.99z"
+          /></svg
+        >Analysis
+      </button>
+      <button class="tab" onclick="switchTab('bills', this)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 16H4v-2h1V16zm0-4H4v-2h1V12zm0-4H4V6h1V8zm11 8H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"
+          /></svg
+        >Bills
+      </button>
     </div>
 
-    <!-- MODAL -->
-    <div id="modal"><div class="m-content"><h3 id="m-vendor">Assign Vendor</h3><div id="cat-btns"></div><button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:var(--sec)">Cancel</button></div></div>
+    <div id="modal">
+      <div class="m-content">
+        <h3 id="m-vendor">Assign Vendor</h3>
+        <div id="cat-btns"></div>
+        <button
+          onclick="closeModal()"
+          style="
+            margin-top: 20px;
+            background: none;
+            border: none;
+            color: var(--sec);
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby3rOCr-OgODRxLt6WZWa9h148KjTpC5xzneAbtoT2EOHKy6zNvWt9tOqauMc-V0SO2Hw/exec";
-        const ICONS = { "Housing":"🏠", "Food & Dining":"🍔", "Transportation":"🚗", "Coffee":"☕", "Personal Care":"🧴", "Miscellaneous":"📦", "Groceries":"🛒", "Utilities":"⚡", "Revolut Transfers":"🏦", "Insurance & Loans":"🛡️", "Subscriptions":"📺" };
-        const CATEGORIES = ["Housing", "Food & Dining", "Transportation", "Coffee", "Personal Care", "Miscellaneous", "Groceries", "Utilities", "Revolut Transfers"];
-        
-        let appData = null, myChart = null, activeVendor = "";
+      const API_URL =
+        'https://script.google.com/macros/s/AKfycbzO3KN7gunQcc1yXvHGkWTo88NiBOwGWRlcomZg__F1sx5q91qO56WhG3vDULLBOjea/exec';
+      const ICONS = {
+        Housing: '🏠',
+        'Food & Dining': '🍔',
+        Transportation: '🚗',
+        Coffee: '☕',
+        'Personal Care': '🧴',
+        Miscellaneous: '📦',
+        Groceries: '🛒',
+        Utilities: '⚡',
+        'Revolut Transfers': '🏦',
+        'Insurance & Loans': '🛡️',
+        Subscriptions: '📺',
+      };
+      const CATEGORIES = [
+        'Housing',
+        'Food & Dining',
+        'Transportation',
+        'Coffee',
+        'Personal Care',
+        'Miscellaneous',
+        'Groceries',
+        'Utilities',
+        'Revolut Transfers',
+      ];
 
-        async function init() {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        
-        if (data.error) {
-            console.error("Script Error:", data.error);
-            alert("Database Error: " + data.error); // This will tell you exactly what tab is missing
-            return;
+      let appData = null,
+        myChart = null,
+        activeVendor = '';
+
+      async function init() {
+        try {
+          const res = await fetch(API_URL);
+          appData = await res.json();
+          renderAll();
+        } catch (e) {
+          console.error(e);
         }
+      }
 
-        appData = data;
-        renderAll();
-    } catch (e) {
-        console.error("Fetch failed. Is the URL correct and deployed as 'Anyone'?", e);
-    }
-}
+      function renderAll() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const spentPct =
+          (appData.summary.totalSpent / appData.summary.income) * 100;
+        const healthFill = document.getElementById('health-fill');
+        healthFill.style.width = Math.min(spentPct, 100) + '%';
+        healthFill.style.background =
+          spentPct > 80
+            ? 'var(--red)'
+            : spentPct > 60
+            ? 'var(--orange)'
+            : 'var(--accent)';
 
-        function renderAll() {
-            // Health Bar
-            const spentPct = (appData.summary.totalSpent / appData.summary.income) * 100;
-            const healthFill = document.getElementById('health-fill');
-            healthFill.style.width = Math.min(spentPct, 100) + "%";
-            healthFill.style.background = spentPct > 80 ? "var(--red)" : spentPct > 60 ? "var(--orange)" : "var(--accent)";
+        const todayData = appData.daily[todayStr];
+        document.getElementById('today-summary').innerHTML = todayData
+          ? `<div class="today-summary-box"><div style="font-size:12px; font-weight:600; color:var(--accent); text-transform:uppercase;">Today's Spending</div><div class="today-total">€${todayData.total.toFixed(
+              2
+            )}</div></div>`
+          : '';
 
-            // Feed Header (Today Total Only)
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayData = appData.daily[todayStr];
-            document.getElementById('today-summary').innerHTML = todayData ? 
-                `<div class="today-summary-box"><div class="today-label">Today's Spending</div><div class="today-total">€${todayData.total.toFixed(2)}</div></div>` : "";
+        const dates = Object.keys(appData.daily).sort().reverse();
+        document.getElementById('daily-feed').innerHTML = dates
+          .map((date) => {
+            const isToday = date === todayStr;
+            return (
+              `<div class="day-group"><div class="day-header"><div class="day-date">${
+                isToday
+                  ? 'Today'
+                  : new Date(date).toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+              }</div><div class="day-total">€${appData.daily[
+                date
+              ].total.toFixed(2)}</div></div>` +
+              appData.daily[date].items
+                .map((t) => {
+                  const safeMerchant = t.merchant.replace(/'/g, "\\'");
+                  return `<div class="row" onclick="openAssign('${safeMerchant}')"><div class="r-info"><div class="r-icon">${
+                    ICONS[t.category] || '💸'
+                  }</div><div><div class="r-name">${
+                    t.merchant
+                  }</div><div class="r-cat">${
+                    t.category
+                  }</div></div></div><div class="r-amt">€${t.amount.toFixed(
+                    2
+                  )}</div></div>`;
+                })
+                .join('') +
+              `</div>`
+            );
+          })
+          .join('');
 
-            // List Split
-            const dates = Object.keys(appData.daily).sort().reverse();
-            document.getElementById('daily-feed').innerHTML = dates.map(date => {
-                const total = appData.daily[date].total.toFixed(2);
-                const isToday = date === todayStr;
-                const dateLabel = isToday ? "Today" : new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-                return `
-                    <div class="day-group">
-                        <div class="day-header"><div class="day-date">${dateLabel}</div><div class="day-total">€${total}</div></div>
-                        ${appData.daily[date].items.map(t => `<div class="row" onclick="openAssign('${t.merchant}')"><div class="r-info"><div class="r-icon">${ICONS[t.category]||"💸"}</div><div><div class="r-name">${t.merchant}</div><div class="r-cat">${t.category}</div></div></div><div class="r-amt">€${t.amount.toFixed(2)}</div></div>`).join('')}
-                    </div>
-                `;
-            }).join('');
+        document.getElementById('a-income').innerText =
+          '€' + Number(appData.summary.income).toFixed(0);
+        document.getElementById('a-fixed').innerText =
+          '€' + Number(appData.summary.fixed).toFixed(0);
+        document.getElementById('a-variable').innerText =
+          '€' + Number(appData.summary.variable).toFixed(0);
+        document.getElementById('a-saved').innerText =
+          '€' + Number(appData.summary.saved).toFixed(0);
 
-            // Analysis
-            document.getElementById('a-income').innerText = "€" + appData.summary.income.toFixed(0);
-            document.getElementById('a-fixed').innerText = "€" + appData.summary.fixed.toFixed(0);
-            document.getElementById('a-variable').innerText = "€" + appData.summary.variable.toFixed(0);
-            document.getElementById('a-saved').innerText = "€" + appData.summary.saved.toFixed(0);
+        document.getElementById('category-progress-list').innerHTML =
+          Object.keys(appData.categories)
+            .map((cat) => {
+              const spent = appData.categories[cat];
+              const limit = appData.limits[cat] || 0;
+              const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+              return `<div class="cat-row"><div class="cat-header"><div>${
+                ICONS[cat] || ''
+              } ${cat} <span style="font-size:11px; font-weight:400; color:var(--sec)">${Math.round(
+                pct
+              )}%</span></div><div>€${spent.toFixed(
+                0
+              )} <span style="font-size:11px; font-weight:400; color:var(--sec)">/ €${limit.toFixed(
+                0
+              )}</span></div></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${pct}%; background:${
+                pct > 95 ? 'var(--red)' : 'var(--blue)'
+              }"></div></div></div>`;
+            })
+            .join('');
 
-            // Progress List (Coffee 60 / 120)
-            document.getElementById('category-progress-list').innerHTML = Object.keys(appData.categories).map(cat => {
-                const spent = appData.categories[cat];
-                const limit = appData.limits[cat] || 0;
-                const pct = limit > 0 ? Math.min((spent/limit)*100, 100) : 0;
-                return `
-                    <div class="cat-row">
-                        <div class="cat-header">
-                            <div>${ICONS[cat]||""} ${cat} <span class="cat-meta">${Math.round(pct)}%</span></div>
-                            <div>€${spent.toFixed(0)} <span class="cat-meta">/ €${limit.toFixed(0)}</span></div>
-                        </div>
-                        <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${pct}%; background:${pct > 95 ? "var(--red)" : "var(--blue)"}"></div></div>
-                    </div>
-                `;
-            }).join('');
+        const labels = Object.keys(appData.categories),
+          vals = Object.values(appData.categories);
+        if (myChart) myChart.destroy();
+        myChart = new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: vals,
+                backgroundColor: [
+                  '#30D158',
+                  '#0A84FF',
+                  '#FF9F0A',
+                  '#5856D6',
+                  '#FF375F',
+                  '#64D2FF',
+                  '#FFD60A',
+                ],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: { plugins: { legend: { display: false } }, cutout: '75%' },
+        });
 
-            // Insights
-            document.getElementById('insights-list').innerHTML = `
-                <div class="row"><div class="r-info"><div class="r-icon">🏆</div><div><div class="r-name">${appData.summary.topVendor}</div><div class="r-cat">Top Merchant</div></div></div></div>
-                <div class="row"><div class="r-info"><div class="r-icon">📊</div><div><div class="r-name">${appData.summary.topCategory}</div><div class="r-cat">Top Category</div></div></div></div>
-            `;
+        document.getElementById(
+          'insights-list'
+        ).innerHTML = `<div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">🔥</div><div><div class="r-name">${appData.summary.topVendor}</div><div class="r-cat">Most money spent at this vendor</div></div></div></div><div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">📊</div><div><div class="r-name">${appData.summary.topCategory}</div><div class="r-cat">Your biggest expense category</div></div></div></div>`;
 
-            // Bills Split
-            document.getElementById('bill-total').innerText = `€${appData.summary.fixed.toFixed(2)}`;
-            document.getElementById('sub-list').innerHTML = appData.subscriptions.filter(s => s.category === "Subscriptions").map(s => `<div class="row"><div class="r-info"><div class="r-icon">📺</div><div><div class="r-name">${s.merchant}</div><div class="r-cat">Day ${s.day}</div></div></div><div class="r-amt">€${s.amount.toFixed(2)}</div></div>`).join('');
-            document.getElementById('recur-list').innerHTML = appData.subscriptions.filter(s => s.category === "Insurance & Loans").map(s => `<div class="row"><div class="r-info"><div class="r-icon">🛡️</div><div><div class="r-name">${s.merchant}</div><div class="r-cat">Monthly Recurring</div></div></div><div class="r-amt">€${s.amount.toFixed(2)}</div></div>`).join('');
-        }
+        document.getElementById(
+          'bill-total'
+        ).innerText = `€${appData.summary.fixed.toFixed(2)}`;
+        document.getElementById('sub-list').innerHTML = appData.subscriptions
+          .filter((s) => s.category.includes('Subscription'))
+          .map(
+            (s) =>
+              `<div class="row"><div class="r-info"><div class="r-icon">📺</div><div><div class="r-name">${
+                s.merchant
+              }</div><div class="r-cat">Day ${
+                s.day
+              }</div></div></div><div class="r-amt">€${s.amount.toFixed(
+                2
+              )}</div></div>`
+          )
+          .join('');
+        document.getElementById('recur-list').innerHTML = appData.subscriptions
+          .filter(
+            (s) =>
+              s.category.includes('Insurance') || s.category.includes('Loan')
+          )
+          .map(
+            (s) =>
+              `<div class="row"><div class="r-info"><div class="r-icon">🛡️</div><div><div class="r-name">${
+                s.merchant
+              }</div><div class="r-cat">Day ${
+                s.day
+              }</div></div></div><div class="r-amt">€${s.amount.toFixed(
+                2
+              )}</div></div>`
+          )
+          .join('');
+      }
 
-        function switchTab(id, el) {
-            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function openAssign(v) { activeVendor = v; document.getElementById('m-vendor').innerText = v; document.getElementById('cat-btns').innerHTML = CATEGORIES.map(c => `<button class="cat-btn" onclick="saveA('${c}')">${c}</button>`).join(''); document.getElementById('modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-        async function saveA(cat) { const always = confirm(`Always remember "${activeVendor}"?`); closeModal(); await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(cat)}&saveRule=${always}`); init(); }
-        
+      function switchTab(id, el) {
+        document
+          .querySelectorAll('.content')
+          .forEach((c) => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document
+          .querySelectorAll('.tab')
+          .forEach((t) => t.classList.remove('active'));
+        el.classList.add('active');
+      }
+      function openAssign(v) {
+        activeVendor = v;
+        document.getElementById('m-vendor').innerText = v;
+        document.getElementById('cat-btns').innerHTML = CATEGORIES.map(
+          (c) => `<button class="cat-btn" onclick="saveA('${c}')">${c}</button>`
+        ).join('');
+        document.getElementById('modal').style.display = 'flex';
+      }
+      function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+      }
+      async function saveA(cat) {
+        const always = confirm(`Always remember "${activeVendor}"?`);
+        closeModal();
+        await fetch(
+          `${API_URL}?action=addRule&vendor=${encodeURIComponent(
+            activeVendor
+          )}&category=${encodeURIComponent(cat)}&saveRule=${always}`
+        );
         init();
+      }
+      init();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') init();
+      });
     </script>
-</body>
+  </body>
 </html>
