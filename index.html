@@ -117,17 +117,29 @@
     <div id="modal"><div class="m-content"><h3 id="m-vendor">Assign Vendor</h3><div id="cat-btns"></div><button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:var(--sec)">Cancel</button></div></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxB5aOcDY4qynDD_3cJgglCU1ekQxjoCN46DyLxKhGycM5Bt_8_Xq9hfvSxV0jLj5Y-Pg/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycby3rOCr-OgODRxLt6WZWa9h148KjTpC5xzneAbtoT2EOHKy6zNvWt9tOqauMc-V0SO2Hw/exec";
         const ICONS = { "Housing":"🏠", "Food & Dining":"🍔", "Transportation":"🚗", "Coffee":"☕", "Personal Care":"🧴", "Miscellaneous":"📦", "Groceries":"🛒", "Utilities":"⚡", "Revolut Transfers":"🏦", "Insurance & Loans":"🛡️", "Subscriptions":"📺" };
         const CATEGORIES = ["Housing", "Food & Dining", "Transportation", "Coffee", "Personal Care", "Miscellaneous", "Groceries", "Utilities", "Revolut Transfers"];
         
         let appData = null, myChart = null, activeVendor = "";
 
         async function init() {
-            const res = await fetch(API_URL);
-            appData = await res.json();
-            renderAll();
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        if (data.error) {
+            console.error("Script Error:", data.error);
+            alert("Database Error: " + data.error); // This will tell you exactly what tab is missing
+            return;
         }
+
+        appData = data;
+        renderAll();
+    } catch (e) {
+        console.error("Fetch failed. Is the URL correct and deployed as 'Anyone'?", e);
+    }
+}
 
         function renderAll() {
             // Health Bar
