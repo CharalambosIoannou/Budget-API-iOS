@@ -126,23 +126,23 @@
         }
 
         function renderFeed() {
-            const list = document.getElementById('tx-list');
-            const pending = document.getElementById('pending-section');
-            
-            const misc = appData.transactions.filter(t => t.category === "Miscellaneous");
-            if(misc.length > 0) {
-                pending.innerHTML = `<div class="pending-box"><div class="m-label" style="color:var(--orange)">Action Required</div>` + 
-                    misc.slice(0,2).map(t => `<div class="p-item"><div>${t.merchant}</div><button class="btn-assign" onclick="openAssign('${t.merchant}')">Assign</button></div>`).join('') + `</div>`;
-            } else { pending.innerHTML = ""; }
+    const list = document.getElementById('tx-list');
+    const pending = document.getElementById('pending-section');
+    
+    const misc = appData.transactions.filter(t => t.category === "Miscellaneous");
+    if(misc.length > 0) {
+        pending.innerHTML = `<div class="pending-box"><div class="m-label" style="color:var(--orange)">Action Required</div>` + 
+            misc.slice(0,1).map(t => `<div class="p-item"><div>${t.merchant}</div><button class="btn-assign" onclick="openAssign('${t.merchant}')">Assign</button></div>`).join('') + `</div>`;
+    } else { pending.innerHTML = ""; }
 
-            list.innerHTML = appData.transactions.map(t => `
-                <div class="row">
-                    <div class="r-info"><div class="r-icon">${ICONS[t.category] || "💸"}</div>
-                    <div><div class="r-name">${t.merchant}</div><div class="r-cat">${t.category}</div></div></div>
-                    <div class="r-amt">€${t.amount.toFixed(2)}</div>
-                </div>
-            `).join('');
-        }
+    list.innerHTML = appData.transactions.map(t => `
+        <div class="row" onclick="openAssign('${t.merchant}')">
+            <div class="r-info"><div class="r-icon">${ICONS[t.category] || "📦"}</div>
+            <div><div class="r-name">${t.merchant}</div><div class="r-cat">${t.category}</div></div></div>
+            <div class="r-amt">€${Number(t.amount).toFixed(2)}</div>
+        </div>
+    `).join('');
+}
 
         function renderAnalysis() {
             document.getElementById('m-income').innerText = `€${appData.summary.income}`;
@@ -204,11 +204,18 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        async function saveRule(cat) {
-            closeModal();
-            await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(cat)}`);
-            init(); // Refresh
-        }
+       async function saveRule(cat) {
+    const saveAlways = confirm(`Always categorize "${activeVendor}" as ${cat}?\n\nOK = Always (Save Rule)\nCancel = Just Once (History Update)`);
+    closeModal();
+    
+    // Show a loading state
+    document.getElementById('status-msg').innerText = "Updating history...";
+    document.getElementById('status-msg').style.display = 'block';
+
+    await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(cat)}&saveRule=${saveAlways}`);
+    
+    init(); // Refresh data
+}
 
         async function setIncome() {
             const amt = prompt("Enter income for this month:");
