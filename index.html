@@ -47,30 +47,8 @@
       .active {
         display: block;
       }
-      .today-summary-box {
-        background: rgba(48, 209, 88, 0.1);
-        border: 1.5px solid var(--accent);
-        border-radius: 20px;
-        padding: 20px;
-        text-align: center;
-        margin-bottom: 25px;
-      }
-      .day-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 12px;
-      }
-      .day-date {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--sec);
-      }
-      .day-total {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--sec);
-      }
+
+      /* Analysis Metrics */
       .metrics-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -83,6 +61,7 @@
         border-radius: 16px;
         border: 1px solid #2c2c2e;
         cursor: pointer;
+        text-align: center;
       }
       .m-title {
         font-size: 10px;
@@ -95,12 +74,61 @@
         font-size: 18px;
         font-weight: 700;
       }
+
+      /* Today Summary */
+      .today-summary-box {
+        background: rgba(48, 209, 88, 0.1);
+        border: 1.5px solid var(--accent);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 25px;
+      }
+      .today-total {
+        font-size: 38px;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      /* Progress Bars */
+      .cat-row {
+        margin-bottom: 18px;
+        background: var(--card);
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid #222;
+      }
+      .cat-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .cat-meta {
+        font-size: 11px;
+        color: var(--sec);
+        font-weight: 400;
+      }
+      .bar-container {
+        height: 8px;
+        background: #2c2c2e;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        transition: width 0.6s ease;
+      }
+
+      /* Tabs Bar Icons */
       .tabs {
         position: fixed;
         bottom: 0;
         width: 100%;
         height: 90px;
-        background: rgba(15, 15, 17, 0.9);
+        background: rgba(15, 15, 17, 0.95);
         backdrop-filter: blur(20px);
         display: flex;
         justify-content: space-around;
@@ -125,6 +153,24 @@
       .tab svg {
         width: 22px;
         height: 22px;
+      }
+
+      /* Rows */
+      .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 25px 0 10px;
+      }
+      .day-date {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sec);
+      }
+      .day-total {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--sec);
       }
       .row {
         background: var(--card);
@@ -154,6 +200,8 @@
         font-weight: 700;
         font-size: 16px;
       }
+
+      /* Modal */
       #modal {
         display: none;
         position: fixed;
@@ -184,8 +232,6 @@
         border: none;
         font-weight: 600;
       }
-
-      /* New Sub Summary Style */
       .sub-summary-row {
         display: flex;
         justify-content: space-between;
@@ -199,7 +245,6 @@
   <body>
     <div class="top-nav">
       <div
-        id="health-label"
         style="
           font-size: 10px;
           font-weight: 700;
@@ -224,15 +269,17 @@
       </div>
     </div>
 
+    <!-- ACTIVITY TAB -->
     <div id="feed" class="content active">
       <div id="today-summary"></div>
       <div id="daily-feed"></div>
     </div>
 
+    <!-- ANALYSIS TAB -->
     <div id="analysis" class="content">
       <div class="metrics-grid">
         <div class="m-card" onclick="setIncome()">
-          <div class="m-title">Income (Tap to Set)</div>
+          <div class="m-title">Income (Set)</div>
           <div id="a-income" class="m-val">€0</div>
         </div>
         <div class="m-card">
@@ -259,16 +306,18 @@
           background: var(--card);
           padding: 20px;
           border-radius: 20px;
-          margin-bottom: 20px;
+          margin-bottom: 25px;
         "
       >
         <canvas id="pieChart"></canvas>
       </div>
+
       <div id="category-progress-list"></div>
     </div>
 
+    <!-- BILLS TAB -->
     <div id="bills" class="content">
-      <div class="m-card" style="margin-bottom: 20px">
+      <div class="m-card" style="margin-bottom: 20px; cursor: default">
         <div class="m-title">Monthly Fixed Total</div>
         <div
           id="bill-total"
@@ -296,6 +345,7 @@
       <div id="recur-list"></div>
     </div>
 
+    <!-- TABS BAR -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('feed', this)">
         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -318,9 +368,10 @@
       </button>
     </div>
 
+    <!-- MODAL -->
     <div id="modal">
       <div class="m-content">
-        <h3 id="m-vendor">Assign Vendor</h3>
+        <h3 id="m-vendor">Assign Category</h3>
         <div id="cat-btns"></div>
         <button
           onclick="closeModal()"
@@ -391,6 +442,7 @@
             ? 'var(--orange)'
             : 'var(--accent)';
 
+        // Today Summary
         const todayData = appData.daily[todayStr];
         document.getElementById('today-summary').innerHTML = todayData
           ? `<div class="today-summary-box"><div style="font-size:12px; font-weight:600; color:var(--accent); text-transform:uppercase;">Today's Spending</div><div class="today-total">€${todayData.total.toFixed(
@@ -398,6 +450,7 @@
             )}</div></div>`
           : '';
 
+        // Daily List
         const dates = Object.keys(appData.daily).sort().reverse();
         document.getElementById('daily-feed').innerHTML = dates
           .map((date) => {
@@ -433,6 +486,7 @@
           })
           .join('');
 
+        // Analysis Metrics
         document.getElementById('a-income').innerText =
           '€' + Number(appData.summary.income).toFixed(0);
         document.getElementById('a-fixed').innerText =
@@ -442,29 +496,41 @@
         document.getElementById('a-saved').innerText =
           '€' + Number(appData.summary.saved).toFixed(0);
 
-        // Analysis Bars
+        // CATEGORY PROGRESS BARS (Restored & Fixed)
         const totalSpend = appData.summary.totalSpent || 1;
         document.getElementById('category-progress-list').innerHTML =
           Object.keys(appData.categories)
             .map((cat) => {
               const spent = appData.categories[cat],
                 limit = appData.limits[cat] || 0;
-              const pctOfTotal = (spent / totalSpend) * 100,
-                limitPct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-              return `<div class="cat-row"><div class="cat-header"><div>${
-                ICONS[cat] || ''
-              } ${cat} <span style="font-size:11px; font-weight:400; color:var(--sec)">${Math.round(
+              const pctOfTotal = (spent / totalSpend) * 100;
+              const limitPct =
+                limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+              return `
+                    <div class="cat-row">
+                        <div class="cat-header">
+                            <div>${
+                              ICONS[cat] || '📦'
+                            } ${cat} <span class="cat-meta">${Math.round(
                 pctOfTotal
-              )}% of total</span></div><div>€${spent.toFixed(
+              )}% of total</span></div>
+                            <div>€${spent.toFixed(
+                              0
+                            )} <span class="cat-meta">/ €${limit.toFixed(
                 0
-              )} <span style="font-size:11px; font-weight:400; color:var(--sec)">/ €${limit.toFixed(
-                0
-              )}</span></div></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${limitPct}%; background:${
-                limitPct > 95 ? 'var(--red)' : 'var(--blue)'
-              }"></div></div></div>`;
+              )}</span></div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width:${limitPct}%; background:${
+                limitPct > 90 ? 'var(--red)' : 'var(--blue)'
+              }"></div>
+                        </div>
+                    </div>
+                `;
             })
             .join('');
 
+        // Pie Chart
         const labels = Object.keys(appData.categories),
           vals = Object.values(appData.categories);
         if (myChart) myChart.destroy();
@@ -500,7 +566,6 @@
         document.getElementById(
           'recur-sum-val'
         ).innerText = `€${appData.summary.recurTotal.toFixed(2)}`;
-
         document.getElementById('sub-list').innerHTML = appData.subscriptions
           .filter((s) => s.category.includes('Subscription'))
           .map(
@@ -560,7 +625,6 @@
         );
         init();
       }
-
       async function setIncome() {
         const val = prompt('Enter monthly income:');
         if (!val) return;
@@ -568,7 +632,6 @@
         await fetch(`${API_URL}?action=setIncome&month=${month}&amount=${val}`);
         init();
       }
-
       init();
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') init();
