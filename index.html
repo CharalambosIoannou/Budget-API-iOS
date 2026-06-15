@@ -7,59 +7,172 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Charting Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #000; --card: #1C1C1E; --accent: #30D158; --text: #FFF; --sec: #8E8E93; --blue: #0A84FF; --orange: #FF9F0A; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
-        
-        /* Header & Navigation */
-        .top-nav { padding: 60px 20px 20px; position: sticky; top: 0; background: var(--bg); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        :root {
+            --bg: #000000;
+            --card: #1C1C1E;
+            --accent: #30D158;
+            --text: #FFFFFF;
+            --sec: #8E8E93;
+            --blue: #0A84FF;
+            --orange: #FF9F0A;
+            --glass: rgba(28, 28, 30, 0.85);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 100px; /* Space for tab bar */
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            padding: 60px 20px 20px;
+            background: var(--bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
         .top-nav h1 { font-size: 32px; margin: 0; font-weight: 700; }
+
+        /* Profile/Income Button */
+        .profile-btn {
+            width: 36px; height: 36px;
+            background: var(--card);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; border: 1px solid #333; color: var(--accent);
+        }
+
+        /* Content Sections */
         .content { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
-        .active { display: block; }
+        .content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Metrics Grid */
-        .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-        .m-card { background: var(--card); padding: 15px 10px; border-radius: 16px; text-align: center; border: 1px solid #2C2C2E; }
-        .m-label { font-size: 10px; color: var(--sec); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
-        .m-val { font-size: 15px; font-weight: 700; }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
 
-        /* Chart Cards */
-        .chart-card { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; position: relative; }
-        canvas { max-width: 100%; height: 200px !important; }
+        .m-card {
+            background: var(--card);
+            padding: 15px 5px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid #2C2C2E;
+        }
 
-        /* Learning Box */
-        .pending-box { background: linear-gradient(135deg, #2c2c2e, #1c1c1e); padding: 16px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #3a3a3c; }
-        .p-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-top: 10px; }
-        .btn-assign { background: var(--blue); border: none; color: #fff; padding: 8px 14px; border-radius: 20px; font-weight: 600; font-size: 12px; }
+        .m-label { font-size: 10px; color: var(--sec); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .m-val { font-size: 16px; font-weight: 700; }
+
+        /* Status Bar */
+        #status-msg {
+            text-align: center; color: var(--orange); font-size: 12px;
+            margin-bottom: 15px; display: none;
+        }
+
+        /* Action Required Box */
+        .pending-box {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            border: 1px solid #3a3a3c;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 25px;
+        }
+
+        .p-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-top: 10px;
+        }
+
+        .btn-assign {
+            background: var(--blue); border: none; color: white;
+            padding: 8px 15px; border-radius: 20px; font-weight: 600; font-size: 12px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: var(--card); padding: 20px; border-radius: 20px;
+            margin-bottom: 25px; position: relative; min-height: 220px;
+        }
 
         /* List Items */
-        .row { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 16px; margin-bottom: 8px; }
-        .r-info { display: flex; align-items: center; gap: 12px; }
-        .r-icon { width: 40px; height: 40px; background: #2C2C2E; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .r-name { font-weight: 600; font-size: 15px; }
-        .r-cat { font-size: 11px; color: var(--sec); }
-        .r-amt { font-weight: 700; font-size: 16px; }
+        .date-label { font-size: 17px; font-weight: 600; margin: 25px 0 15px; color: var(--sec); }
+        .row {
+            background: var(--card); border-radius: 18px; padding: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border: 1px solid #222;
+        }
 
-        /* Bottom Tab Bar */
-        .tabs { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(20,20,20,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 10px; border-top: 0.5px solid #333; }
-        .tab { display: flex; flex-direction: column; align-items: center; color: var(--sec); font-size: 10px; text-decoration: none; border:none; background:none; }
+        .r-info { display: flex; align-items: center; gap: 15px; }
+        .r-icon {
+            width: 44px; height: 44px; background: #2C2C2E;
+            border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; font-size: 22px;
+        }
+
+        .r-name { font-weight: 600; font-size: 16px; }
+        .r-cat { font-size: 12px; color: var(--sec); margin-top: 2px; }
+        .r-amt { font-weight: 700; font-size: 17px; }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed; bottom: 0; width: 100%; height: 85px;
+            background: var(--glass); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); display: flex;
+            justify-content: space-around; padding-top: 10px;
+            border-top: 0.5px solid #333; z-index: 1000;
+        }
+
+        .tab {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--sec); font-size: 10px; background: none; border: none; gap: 5px;
+        }
+
         .tab.active { color: var(--blue); }
-        .tab svg { width: 24px; height: 24px; margin-bottom: 4px; }
+        .tab svg { width: 24px; height: 24px; }
 
         /* Assign Modal */
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
-        .m-content { background:var(--card); width:80%; padding:25px; border-radius:20px; text-align:center; }
-        .cat-btn { display:block; width:100%; padding:12px; margin:8px 0; background:#2C2C2E; border-radius:10px; color:#fff; border:none; font-weight:600; }
+        #modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%;
+            height: 100%; background: rgba(0,0,0,0.95); z-index: 2000;
+            align-items: center; justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card); width: 85%; padding: 25px;
+            border-radius: 24px; text-align: center;
+        }
+
+        .cat-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
+        .cat-option {
+            background: #2C2C2E; color: white; border: none; padding: 14px;
+            border-radius: 12px; font-size: 15px; font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
     <div class="top-nav">
-        <h1 id="title">Activity</h1>
-        <div onclick="setIncome()" style="width:32px; height:32px; background:#2C2C2E; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">€</div>
+        <h1 id="nav-title">Activity</h1>
+        <div class="profile-btn" onclick="setIncome()">€</div>
     </div>
+
+    <div id="status-msg">Syncing...</div>
 
     <!-- FEED TAB -->
     <div id="feed" class="content active">
@@ -69,93 +182,130 @@
 
     <!-- ANALYSIS TAB -->
     <div id="analysis" class="content">
-        <div class="metrics">
-            <div class="m-card"><div class="m-label">Income</div><div id="m-income" class="m-val">€0</div></div>
-            <div class="m-card"><div class="m-label">Spent</div><div id="m-spent" class="m-val">€0</div></div>
-            <div class="m-card" style="background:rgba(48,209,88,0.1)"><div class="m-label">Saved</div><div id="m-saved" class="m-val" style="color:var(--accent)">€0</div></div>
+        <div class="metrics-grid">
+            <div class="m-card">
+                <div class="m-label">Income</div>
+                <div id="stat-income" class="m-val">€0</div>
+            </div>
+            <div class="m-card">
+                <div class="m-label">Spent</div>
+                <div id="stat-spent" class="m-val">€0</div>
+            </div>
+            <div class="m-card" style="background: rgba(48, 209, 88, 0.1);">
+                <div class="m-label">Saved</div>
+                <div id="stat-saved" class="m-val" style="color:var(--accent)">€0</div>
+            </div>
         </div>
+
         <div class="chart-card">
             <canvas id="pieChart"></canvas>
         </div>
-        <div id="leaderboard"></div>
+
+        <div class="date-label">Categories</div>
+        <div id="category-leaderboard"></div>
     </div>
 
     <!-- BILLS TAB -->
     <div id="bills" class="content">
-        <div class="m-label" style="margin-bottom:15px">Monthly Subscriptions</div>
+        <div class="date-label" style="margin-top:0">Fixed Subscriptions</div>
         <div id="sub-list"></div>
     </div>
 
-    <!-- Tab Bar -->
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('feed', 'Activity', this)">
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+        <button class="tab active" onclick="showTab('feed', 'Activity', this)">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h4v7H4v-7zm6-9h4v16h-4V5zm6 9h4v7h-4v-7z"/></svg>Feed
         </button>
-        <button class="tab" onclick="switchTab('analysis', 'Analysis', this)">
+        <button class="tab" onclick="showTab('analysis', 'Analysis', this)">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.52-4.24 8.99-8.99h-8.99z"/></svg>Analysis
         </button>
-        <button class="tab" onclick="switchTab('bills', 'Bills', this)">
+        <button class="tab" onclick="showTab('bills', 'Bills', this)">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 16H4v-2h1V16zm0-4H4v-2h1V12zm0-4H4V6h1V8zm11 8H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg>Bills
         </button>
     </div>
 
-    <!-- Assign Modal -->
+    <!-- ASSIGN MODAL -->
     <div id="modal">
-        <div class="m-content">
-            <h3 id="modal-vendor">Assign Category</h3>
-            <div id="cat-options"></div>
-            <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:var(--sec)">Cancel</button>
+        <div class="modal-content">
+            <h3 id="modal-vendor" style="margin-top:0">Assign Vendor</h3>
+            <p style="color:var(--sec); font-size:13px;">Choose a category for this transaction.</p>
+            <div class="cat-grid" id="category-btns"></div>
+            <button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:var(--sec)">Cancel</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIG ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbwVXbN2Jj269bhR4AjMZrt-BU8WhsVETf1HE0_vfReBA3j3JqA1AmrBhVi9GT4upzPqSQ/exec";
+        // --- SETTINGS ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbw1CqQzd20Pn3S52iKn79Mi3D0u8vQxp8Aedn1Pwytt462k0oEB4q26f4B5cEl18n0ftw/exec";
         const CATEGORIES = ["Housing", "Food & Dining", "Transportation", "Coffee", "Personal Care", "Miscellaneous"];
-        const ICONS = { "Housing":"🏠", "Food & Dining":"🍔", "Transportation":"🚗", "Coffee":"☕", "Personal Care":"🧴", "Miscellaneous":"📦" };
-        
+        const ICONS = {
+            "Housing": "🏠", "Food & Dining": "🍔", "Transportation": "🚗", 
+            "Coffee": "☕", "Personal Care": "🧴", "Miscellaneous": "📦"
+        };
+
         let appData = null;
-        let pieChart = null;
+        let myChart = null;
+        let activeVendor = "";
 
         async function init() {
-            const res = await fetch(API_URL);
-            appData = await res.json();
+            try {
+                const res = await fetch(API_URL);
+                appData = await res.json();
+                renderAll();
+            } catch (e) {
+                console.error("Fetch failed", e);
+            }
+        }
+
+        function renderAll() {
             renderFeed();
             renderAnalysis();
             renderBills();
         }
 
         function renderFeed() {
-    const list = document.getElementById('tx-list');
-    const pending = document.getElementById('pending-section');
-    
-    const misc = appData.transactions.filter(t => t.category === "Miscellaneous");
-    if(misc.length > 0) {
-        pending.innerHTML = `<div class="pending-box"><div class="m-label" style="color:var(--orange)">Action Required</div>` + 
-            misc.slice(0,1).map(t => `<div class="p-item"><div>${t.merchant}</div><button class="btn-assign" onclick="openAssign('${t.merchant}')">Assign</button></div>`).join('') + `</div>`;
-    } else { pending.innerHTML = ""; }
+            const txList = document.getElementById('tx-list');
+            const pending = document.getElementById('pending-section');
+            
+            // Action required box
+            const misc = appData.transactions.filter(t => t.category === "Miscellaneous");
+            if (misc.length > 0) {
+                pending.innerHTML = `
+                    <div class="pending-box">
+                        <div class="m-label" style="color:var(--orange)">Action Required</div>
+                        <div class="p-item">
+                            <div class="r-name">${misc[0].merchant}</div>
+                            <button class="btn-assign" onclick="openAssign('${misc[0].merchant}')">Assign</button>
+                        </div>
+                    </div>`;
+            } else { pending.innerHTML = ""; }
 
-    list.innerHTML = appData.transactions.map(t => `
-        <div class="row" onclick="openAssign('${t.merchant}')">
-            <div class="r-info"><div class="r-icon">${ICONS[t.category] || "📦"}</div>
-            <div><div class="r-name">${t.merchant}</div><div class="r-cat">${t.category}</div></div></div>
-            <div class="r-amt">€${Number(t.amount).toFixed(2)}</div>
-        </div>
-    `).join('');
-}
+            txList.innerHTML = appData.transactions.map(t => `
+                <div class="row" onclick="openAssign('${t.merchant}')">
+                    <div class="r-info">
+                        <div class="r-icon">${ICONS[t.category] || "💸"}</div>
+                        <div>
+                            <div class="r-name">${t.merchant}</div>
+                            <div class="r-cat">${t.category}</div>
+                        </div>
+                    </div>
+                    <div class="r-amt">€${Number(t.amount).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
 
         function renderAnalysis() {
-            document.getElementById('m-income').innerText = `€${appData.summary.income}`;
-            document.getElementById('m-spent').innerText = `€${appData.summary.spent.toFixed(0)}`;
-            document.getElementById('m-saved').innerText = `€${appData.summary.saved.toFixed(0)}`;
+            document.getElementById('stat-income').innerText = `€${Number(appData.summary.income).toFixed(0)}`;
+            document.getElementById('stat-spent').innerText = `€${Number(appData.summary.spent).toFixed(0)}`;
+            document.getElementById('stat-saved').innerText = `€${Number(appData.summary.saved).toFixed(0)}`;
 
             const ctx = document.getElementById('pieChart').getContext('2d');
-            if(pieChart) pieChart.destroy();
-            
+            if (myChart) myChart.destroy();
+
             const labels = Object.keys(appData.categories);
             const values = Object.values(appData.categories);
 
-            pieChart = new Chart(ctx, {
+            myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
@@ -165,68 +315,91 @@
                         borderWidth: 0
                     }]
                 },
-                options: { plugins: { legend: { display: false } }, cutout: '70%' }
+                options: {
+                    cutout: '75%',
+                    plugins: { legend: { display: false } }
+                }
             });
 
-            document.getElementById('leaderboard').innerHTML = labels.map((l, i) => `
-                <div style="display:flex; justify-content:space-between; margin:15px 0; font-size:14px;">
-                    <span>${ICONS[l] || ""} ${l}</span><span style="font-weight:700">€${values[i].toFixed(0)}</span>
+            document.getElementById('category-leaderboard').innerHTML = labels.map((l, i) => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:15px;">
+                    <span>${ICONS[l] || "📦"} ${l}</span>
+                    <span style="font-weight:700">€${values[i].toFixed(2)}</span>
                 </div>
             `).join('');
         }
 
         function renderBills() {
             document.getElementById('sub-list').innerHTML = appData.subscriptions.map(s => `
-                <div class="row" style="opacity:0.8">
-                    <div class="r-info"><div class="r-icon">💳</div>
-                    <div><div class="r-name">${s.merchant}</div><div class="r-cat">Due Day: ${s.day}</div></div></div>
-                    <div class="r-amt">€${s.amount.toFixed(2)}</div>
+                <div class="row">
+                    <div class="r-info">
+                        <div class="r-icon">💳</div>
+                        <div>
+                            <div class="r-name">${s.merchant}</div>
+                            <div class="r-cat">Monthly • Day ${s.day}</div>
+                        </div>
+                    </div>
+                    <div class="r-amt">€${Number(s.amount).toFixed(2)}</div>
                 </div>
             `).join('');
         }
 
-        // --- ACTIONS ---
-        function switchTab(id, title, el) {
+        // --- INTERACTION ---
+        function showTab(id, title, el) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            document.getElementById('title').innerText = title;
+            document.getElementById('nav-title').innerText = title;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
+            if (id === 'analysis') renderAnalysis(); // Refresh chart layout
         }
 
-        let activeVendor = "";
-        function openAssign(vendor) {
-            activeVendor = vendor;
-            document.getElementById('modal-vendor').innerText = vendor;
-            document.getElementById('cat-options').innerHTML = CATEGORIES.map(c => `<button class="cat-btn" onclick="saveRule('${c}')">${c}</button>`).join('');
+        function openAssign(merchant) {
+            activeVendor = merchant;
+            document.getElementById('modal-vendor').innerText = merchant;
+            const btnContainer = document.getElementById('category-btns');
+            btnContainer.innerHTML = CATEGORIES.map(cat => `
+                <button class="cat-option" onclick="saveAssignment('${cat}')">${cat}</button>
+            `).join('');
             document.getElementById('modal').style.display = 'flex';
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-       async function saveRule(cat) {
-    const saveAlways = confirm(`Always categorize "${activeVendor}" as ${cat}?\n\nOK = Always (Save Rule)\nCancel = Just Once (History Update)`);
-    closeModal();
-    
-    // Show a loading state
-    document.getElementById('status-msg').innerText = "Updating history...";
-    document.getElementById('status-msg').style.display = 'block';
+        async function saveAssignment(category) {
+            const always = confirm(`Always remember "${activeVendor}" as ${category}?`);
+            closeModal();
+            
+            const status = document.getElementById('status-msg');
+            status.style.display = 'block';
+            status.innerText = "Updating History...";
 
-    await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(cat)}&saveRule=${saveAlways}`);
-    
-    init(); // Refresh data
-}
-
-        async function setIncome() {
-            const amt = prompt("Enter income for this month:");
-            if(!amt) return;
-            const month = new Date().toISOString().slice(0,7);
-            await fetch(`${API_URL}?action=setIncome&month=${month}&amount=${amt}`);
+            await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(category)}&saveRule=${always}`);
+            
+            status.style.display = 'none';
             init();
         }
 
+        async function setIncome() {
+            const val = prompt("Enter income for this month (e.g. 2500):");
+            if (!val) return;
+            const month = new Date().toISOString().slice(0,7); // 2026-06
+
+            const status = document.getElementById('status-msg');
+            status.style.display = 'block';
+            status.innerText = "Saving Income...";
+
+            await fetch(`${API_URL}?action=setIncome&month=${month}&amount=${val}`);
+            
+            status.style.display = 'none';
+            init();
+        }
+
+        // --- LIFECYCLE ---
         init();
-        document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") init(); });
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") init();
+        });
     </script>
 </body>
 </html>
