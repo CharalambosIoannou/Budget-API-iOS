@@ -3,225 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Budget Dashboard</title>
+    <title>Budget Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg: #000000;
-            --card-bg: #1C1C1E;
-            --text: #FFFFFF;
-            --accent: #30D158;
-            --secondary: #8E8E93;
-            --border: #2C2C2E;
-        }
+        :root { --bg: #000; --card: #1C1C1E; --accent: #30D158; --text: #FFF; --sec: #8E8E93; --blue: #0A84FF; --orange: #FF9F0A; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
+        
+        /* Header & Navigation */
+        .top-nav { padding: 60px 20px 20px; position: sticky; top: 0; background: var(--bg); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .top-nav h1 { font-size: 32px; margin: 0; font-weight: 700; }
+        .content { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            padding-top: 60px; /* Space for the notch */
-            -webkit-user-select: none;
-        }
+        /* Metrics Grid */
+        .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        .m-card { background: var(--card); padding: 15px 10px; border-radius: 16px; text-align: center; border: 1px solid #2C2C2E; }
+        .m-label { font-size: 10px; color: var(--sec); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+        .m-val { font-size: 15px; font-weight: 700; }
 
-        .header {
-            margin-bottom: 25px;
-        }
+        /* Chart Cards */
+        .chart-card { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; position: relative; }
+        canvas { max-width: 100%; height: 200px !important; }
 
-        .header h1 {
-            font-size: 34px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
+        /* Learning Box */
+        .pending-box { background: linear-gradient(135deg, #2c2c2e, #1c1c1e); padding: 16px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #3a3a3c; }
+        .p-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-top: 10px; }
+        .btn-assign { background: var(--blue); border: none; color: #fff; padding: 8px 14px; border-radius: 20px; font-weight: 600; font-size: 12px; }
 
-        /* Summary Card */
-        .summary-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        /* List Items */
+        .row { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 16px; margin-bottom: 8px; }
+        .r-info { display: flex; align-items: center; gap: 12px; }
+        .r-icon { width: 40px; height: 40px; background: #2C2C2E; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .r-name { font-weight: 600; font-size: 15px; }
+        .r-cat { font-size: 11px; color: var(--sec); }
+        .r-amt { font-weight: 700; font-size: 16px; }
 
-        .summary-label {
-            color: var(--secondary);
-            font-size: 13px;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
+        /* Bottom Tab Bar */
+        .tabs { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(20,20,20,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 10px; border-top: 0.5px solid #333; }
+        .tab { display: flex; flex-direction: column; align-items: center; color: var(--sec); font-size: 10px; text-decoration: none; border:none; background:none; }
+        .tab.active { color: var(--blue); }
+        .tab svg { width: 24px; height: 24px; margin-bottom: 4px; }
 
-        .summary-amount {
-            font-size: 42px;
-            font-weight: 700;
-            margin: 5px 0;
-            color: var(--accent);
-        }
-
-        /* List Styling */
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            padding-left: 5px;
-        }
-
-        .list-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .tx-item {
-            background: var(--card-bg);
-            padding: 16px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .tx-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .tx-icon {
-            width: 44px;
-            height: 44px;
-            background: #2C2C2E;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-
-        .tx-details .merchant {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-
-        .tx-details .category {
-            font-size: 12px;
-            color: var(--secondary);
-        }
-
-        .tx-amount {
-            font-weight: 700;
-            font-size: 17px;
-        }
-
-        /* Loading & Empty States */
-        #status-msg {
-            text-align: center;
-            color: var(--secondary);
-            margin-top: 50px;
-            font-size: 15px;
-        }
-
-        .refresh-hint {
-            font-size: 11px;
-            color: var(--secondary);
-            text-align: center;
-            margin-top: 20px;
-            opacity: 0.6;
-        }
+        /* Assign Modal */
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
+        .m-content { background:var(--card); width:80%; padding:25px; border-radius:20px; text-align:center; }
+        .cat-btn { display:block; width:100%; padding:12px; margin:8px 0; background:#2C2C2E; border-radius:10px; color:#fff; border:none; font-weight:600; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Spending</h1>
+    <div class="top-nav">
+        <h1 id="title">Activity</h1>
+        <div onclick="setIncome()" style="width:32px; height:32px; background:#2C2C2E; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">€</div>
     </div>
 
-    <div class="summary-card">
-        <div class="summary-label">Total Today</div>
-        <div id="today-total" class="summary-amount">€0.00</div>
+    <!-- FEED TAB -->
+    <div id="feed" class="content active">
+        <div id="pending-section"></div>
+        <div id="tx-list"></div>
     </div>
 
-    <div class="section-title">Recent Activity</div>
-    
-    <div id="status-msg">Loading transactions...</div>
-    <div id="tx-list" class="list-container"></div>
+    <!-- ANALYSIS TAB -->
+    <div id="analysis" class="content">
+        <div class="metrics">
+            <div class="m-card"><div class="m-label">Income</div><div id="m-income" class="m-val">€0</div></div>
+            <div class="m-card"><div class="m-label">Spent</div><div id="m-spent" class="m-val">€0</div></div>
+            <div class="m-card" style="background:rgba(48,209,88,0.1)"><div class="m-label">Saved</div><div id="m-saved" class="m-val" style="color:var(--accent)">€0</div></div>
+        </div>
+        <div class="chart-card">
+            <canvas id="pieChart"></canvas>
+        </div>
+        <div id="leaderboard"></div>
+    </div>
 
-    <div class="refresh-hint">Pull to refresh or reopen app to update</div>
+    <!-- BILLS TAB -->
+    <div id="bills" class="content">
+        <div class="m-label" style="margin-bottom:15px">Monthly Subscriptions</div>
+        <div id="sub-list"></div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('feed', 'Activity', this)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h4v7H4v-7zm6-9h4v16h-4V5zm6 9h4v7h-4v-7z"/></svg>Feed
+        </button>
+        <button class="tab" onclick="switchTab('analysis', 'Analysis', this)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.52-4.24 8.99-8.99h-8.99z"/></svg>Analysis
+        </button>
+        <button class="tab" onclick="switchTab('bills', 'Bills', this)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 16H4v-2h1V16zm0-4H4v-2h1V12zm0-4H4V6h1V8zm11 8H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg>Bills
+        </button>
+    </div>
+
+    <!-- Assign Modal -->
+    <div id="modal">
+        <div class="m-content">
+            <h3 id="modal-vendor">Assign Category</h3>
+            <div id="cat-options"></div>
+            <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:var(--sec)">Cancel</button>
+        </div>
+    </div>
 
     <script>
-        // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbyG63EKonImo008DsUycB7iIVvBilN2MZm_36Ue-usqmsBp-_W-_qfar0VaYHytcjRsdg/exec";
-
-        const categoryIcons = {
-            "Coffee": "☕",
-            "Transport": "🚗",
-            "Groceries": "🛒",
-            "Subscriptions": "📺",
-            "Other": "💸"
-        };
-
-        async function fetchData() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                if (!data || data.length === 0) {
-                    document.getElementById('status-msg').innerText = "No transactions yet. Start tapping!";
-                    return;
-                }
-
-                document.getElementById('status-msg').style.display = 'none';
-                renderList(data);
-                calculateDailyTotal(data);
-
-            } catch (error) {
-                document.getElementById('status-msg').innerText = "Error loading data. Check API URL.";
-                console.error(error);
-            }
-        }
-
-        function renderList(transactions) {
-            const listElement = document.getElementById('tx-list');
-            listElement.innerHTML = transactions.map(tx => {
-                const icon = categoryIcons[tx.category] || categoryIcons["Other"];
-                const amount = parseFloat(tx.amount).toFixed(2);
-                
-                return `
-                    <div class="tx-item">
-                        <div class="tx-left">
-                            <div class="tx-icon">${icon}</div>
-                            <div class="tx-details">
-                                <div class="merchant">${tx.merchant}</div>
-                                <div class="category">${tx.category}</div>
-                            </div>
-                        </div>
-                        <div class="tx-amount">€${amount}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function calculateDailyTotal(transactions) {
-            const today = new Date().toLocaleDateString();
-            const total = transactions
-                .filter(tx => new Date(tx.date).toLocaleDateString() === today)
-                .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-            
-            document.getElementById('today-total').innerText = `€${total.toFixed(2)}`;
-        }
-
-        // Initial Load
-        fetchData();
+        // --- CONFIG ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbwVXbN2Jj269bhR4AjMZrt-BU8WhsVETf1HE0_vfReBA3j3JqA1AmrBhVi9GT4upzPqSQ/exec";
+        const CATEGORIES = ["Housing", "Food & Dining", "Transportation", "Coffee", "Personal Care", "Miscellaneous"];
+        const ICONS = { "Housing":"🏠", "Food & Dining":"🍔", "Transportation":"🚗", "Coffee":"☕", "Personal Care":"🧴", "Miscellaneous":"📦" };
         
-        // Refresh when the app comes back to foreground
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") fetchData();
-        });
+        let appData = null;
+        let pieChart = null;
+
+        async function init() {
+            const res = await fetch(API_URL);
+            appData = await res.json();
+            renderFeed();
+            renderAnalysis();
+            renderBills();
+        }
+
+        function renderFeed() {
+            const list = document.getElementById('tx-list');
+            const pending = document.getElementById('pending-section');
+            
+            const misc = appData.transactions.filter(t => t.category === "Miscellaneous");
+            if(misc.length > 0) {
+                pending.innerHTML = `<div class="pending-box"><div class="m-label" style="color:var(--orange)">Action Required</div>` + 
+                    misc.slice(0,2).map(t => `<div class="p-item"><div>${t.merchant}</div><button class="btn-assign" onclick="openAssign('${t.merchant}')">Assign</button></div>`).join('') + `</div>`;
+            } else { pending.innerHTML = ""; }
+
+            list.innerHTML = appData.transactions.map(t => `
+                <div class="row">
+                    <div class="r-info"><div class="r-icon">${ICONS[t.category] || "💸"}</div>
+                    <div><div class="r-name">${t.merchant}</div><div class="r-cat">${t.category}</div></div></div>
+                    <div class="r-amt">€${t.amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderAnalysis() {
+            document.getElementById('m-income').innerText = `€${appData.summary.income}`;
+            document.getElementById('m-spent').innerText = `€${appData.summary.spent.toFixed(0)}`;
+            document.getElementById('m-saved').innerText = `€${appData.summary.saved.toFixed(0)}`;
+
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            if(pieChart) pieChart.destroy();
+            
+            const labels = Object.keys(appData.categories);
+            const values = Object.values(appData.categories);
+
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#30D158', '#0A84FF', '#FF9F0A', '#5856D6', '#FF375F', '#64D2FF'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, cutout: '70%' }
+            });
+
+            document.getElementById('leaderboard').innerHTML = labels.map((l, i) => `
+                <div style="display:flex; justify-content:space-between; margin:15px 0; font-size:14px;">
+                    <span>${ICONS[l] || ""} ${l}</span><span style="font-weight:700">€${values[i].toFixed(0)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderBills() {
+            document.getElementById('sub-list').innerHTML = appData.subscriptions.map(s => `
+                <div class="row" style="opacity:0.8">
+                    <div class="r-info"><div class="r-icon">💳</div>
+                    <div><div class="r-name">${s.merchant}</div><div class="r-cat">Due Day: ${s.day}</div></div></div>
+                    <div class="r-amt">€${s.amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // --- ACTIONS ---
+        function switchTab(id, title, el) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('title').innerText = title;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        let activeVendor = "";
+        function openAssign(vendor) {
+            activeVendor = vendor;
+            document.getElementById('modal-vendor').innerText = vendor;
+            document.getElementById('cat-options').innerHTML = CATEGORIES.map(c => `<button class="cat-btn" onclick="saveRule('${c}')">${c}</button>`).join('');
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        async function saveRule(cat) {
+            closeModal();
+            await fetch(`${API_URL}?action=addRule&vendor=${encodeURIComponent(activeVendor)}&category=${encodeURIComponent(cat)}`);
+            init(); // Refresh
+        }
+
+        async function setIncome() {
+            const amt = prompt("Enter income for this month:");
+            if(!amt) return;
+            const month = new Date().toISOString().slice(0,7);
+            await fetch(`${API_URL}?action=setIncome&month=${month}&amount=${amt}`);
+            init();
+        }
+
+        init();
+        document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") init(); });
     </script>
 </body>
 </html>
