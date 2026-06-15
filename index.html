@@ -55,11 +55,6 @@
         text-align: center;
         margin-bottom: 25px;
       }
-      .today-total {
-        font-size: 38px;
-        font-weight: 800;
-        color: var(--accent);
-      }
       .day-header {
         display: flex;
         justify-content: space-between;
@@ -87,6 +82,7 @@
         padding: 15px;
         border-radius: 16px;
         border: 1px solid #2c2c2e;
+        cursor: pointer;
       }
       .m-title {
         font-size: 10px;
@@ -98,34 +94,6 @@
       .m-val {
         font-size: 18px;
         font-weight: 700;
-      }
-      .cat-row {
-        margin-bottom: 15px;
-        background: var(--card);
-        padding: 15px;
-        border-radius: 16px;
-      }
-      .cat-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 14px;
-        margin-bottom: 8px;
-        font-weight: 600;
-      }
-      .cat-meta {
-        font-size: 11px;
-        color: var(--sec);
-        font-weight: 400;
-      }
-      .cat-bar-bg {
-        height: 6px;
-        background: #333;
-        border-radius: 3px;
-        overflow: hidden;
-      }
-      .cat-bar-fill {
-        height: 100%;
-        background: var(--blue);
       }
       .tabs {
         position: fixed;
@@ -216,11 +184,22 @@
         border: none;
         font-weight: 600;
       }
+
+      /* New Sub Summary Style */
+      .sub-summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 5px;
+        font-size: 13px;
+        color: var(--sec);
+        border-bottom: 1px solid #222;
+      }
     </style>
   </head>
   <body>
     <div class="top-nav">
       <div
+        id="health-label"
         style="
           font-size: 10px;
           font-weight: 700;
@@ -252,12 +231,12 @@
 
     <div id="analysis" class="content">
       <div class="metrics-grid">
-        <div class="m-card">
-          <div class="m-title">Income</div>
+        <div class="m-card" onclick="setIncome()">
+          <div class="m-title">Income (Tap to Set)</div>
           <div id="a-income" class="m-val">€0</div>
         </div>
         <div class="m-card">
-          <div class="m-title">Fixed Bills</div>
+          <div class="m-title">Total Bills</div>
           <div id="a-fixed" class="m-val">€0</div>
         </div>
         <div class="m-card">
@@ -286,30 +265,34 @@
         <canvas id="pieChart"></canvas>
       </div>
       <div id="category-progress-list"></div>
-      <div class="m-title" style="margin-top: 20px; margin-bottom: 10px">
-        Insights
-      </div>
-      <div id="insights-list"></div>
     </div>
 
     <div id="bills" class="content">
-      <div class="m-card" style="margin-bottom: 25px">
-        <div class="m-title">Total Subscriptions</div>
+      <div class="m-card" style="margin-bottom: 20px">
+        <div class="m-title">Monthly Fixed Total</div>
         <div
           id="bill-total"
-          class="m-val"
-          style="font-size: 32px; color: var(--orange)"
+          style="
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--orange);
+            margin: 10px 0;
+          "
         >
           €0
         </div>
+        <div class="sub-summary-row">
+          <span>Digital Subs</span><span id="sub-sum-val">€0</span>
+        </div>
+        <div class="sub-summary-row">
+          <span>Recurring/Loans</span><span id="recur-sum-val">€0</span>
+        </div>
       </div>
-      <div class="m-title" style="margin-top: 25px; margin-bottom: 10px">
+      <div class="m-title" style="margin: 25px 0 10px">
         Digital Subscriptions
       </div>
       <div id="sub-list"></div>
-      <div class="m-title" style="margin-top: 25px; margin-bottom: 10px">
-        Loans & Recurring
-      </div>
+      <div class="m-title" style="margin: 25px 0 10px">Loans & Recurring</div>
       <div id="recur-list"></div>
     </div>
 
@@ -355,7 +338,7 @@
 
     <script>
       const API_URL =
-        'https://script.google.com/macros/s/AKfycbxRIlIQf1RjuJJ0aJQBw7TOPAS9B9Lkbz74wGJWs161Yu3IekWiLdlUXXAYZsWyNuoolg/exec';
+        'https://script.google.com/macros/s/AKfycbzogeBUSwahVMwgYOL3FitFNQr9VDxX6BqOFDU9ZzTxB1OIozTt77HM4aWFEci99tGMPA/exec';
       const ICONS = {
         Housing: '🏠',
         'Food & Dining': '🍔',
@@ -389,13 +372,9 @@
         try {
           const res = await fetch(API_URL);
           appData = await res.json();
-          if (appData.error) {
-            alert('Script Error: ' + appData.error);
-            return;
-          }
           renderAll();
         } catch (e) {
-          alert('Fetch failed. Check your API URL.');
+          console.error(e);
         }
       }
 
@@ -403,9 +382,9 @@
         const todayStr = new Date().toISOString().split('T')[0];
         const spentPct =
           (appData.summary.totalSpent / appData.summary.income) * 100;
-        const healthFill = document.getElementById('health-fill');
-        healthFill.style.width = Math.min(spentPct, 100) + '%';
-        healthFill.style.background =
+        document.getElementById('health-fill').style.width =
+          Math.min(spentPct, 100) + '%';
+        document.getElementById('health-fill').style.background =
           spentPct > 80
             ? 'var(--red)'
             : spentPct > 60
@@ -463,15 +442,15 @@
         document.getElementById('a-saved').innerText =
           '€' + Number(appData.summary.saved).toFixed(0);
 
+        // Analysis Bars
         const totalSpend = appData.summary.totalSpent || 1;
         document.getElementById('category-progress-list').innerHTML =
           Object.keys(appData.categories)
             .map((cat) => {
-              const spent = appData.categories[cat];
-              const limit = appData.limits[cat] || 0;
-              const pctOfTotal = (spent / totalSpend) * 100;
-              const limitPct =
-                limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+              const spent = appData.categories[cat],
+                limit = appData.limits[cat] || 0;
+              const pctOfTotal = (spent / totalSpend) * 100,
+                limitPct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
               return `<div class="cat-row"><div class="cat-header"><div>${
                 ICONS[cat] || ''
               } ${cat} <span style="font-size:11px; font-weight:400; color:var(--sec)">${Math.round(
@@ -503,7 +482,6 @@
                   '#5856D6',
                   '#FF375F',
                   '#64D2FF',
-                  '#FFD60A',
                 ],
                 borderWidth: 0,
               },
@@ -512,13 +490,17 @@
           options: { plugins: { legend: { display: false } }, cutout: '75%' },
         });
 
-        document.getElementById(
-          'insights-list'
-        ).innerHTML = `<div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">🔥</div><div><div class="r-name">${appData.summary.topVendor}</div><div class="r-cat">Most frequent merchant</div></div></div></div><div class="row" style="background:#111; border:1px solid #222;"><div class="r-info"><div class="r-icon">📊</div><div><div class="r-name">${appData.summary.topCategory}</div><div class="r-cat">Highest spend category</div></div></div></div>`;
-
+        // Bills Tab
         document.getElementById(
           'bill-total'
         ).innerText = `€${appData.summary.fixed.toFixed(2)}`;
+        document.getElementById(
+          'sub-sum-val'
+        ).innerText = `€${appData.summary.subTotal.toFixed(2)}`;
+        document.getElementById(
+          'recur-sum-val'
+        ).innerText = `€${appData.summary.recurTotal.toFixed(2)}`;
+
         document.getElementById('sub-list').innerHTML = appData.subscriptions
           .filter((s) => s.category.includes('Subscription'))
           .map(
@@ -533,10 +515,7 @@
           )
           .join('');
         document.getElementById('recur-list').innerHTML = appData.subscriptions
-          .filter(
-            (s) =>
-              s.category.includes('Insurance') || s.category.includes('Loan')
-          )
+          .filter((s) => !s.category.includes('Subscription'))
           .map(
             (s) =>
               `<div class="row"><div class="r-info"><div class="r-icon">🛡️</div><div><div class="r-name">${
@@ -581,6 +560,15 @@
         );
         init();
       }
+
+      async function setIncome() {
+        const val = prompt('Enter monthly income:');
+        if (!val) return;
+        const month = new Date().toISOString().slice(0, 7);
+        await fetch(`${API_URL}?action=setIncome&month=${month}&amount=${val}`);
+        init();
+      }
+
       init();
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') init();
